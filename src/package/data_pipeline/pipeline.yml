@@ -1,0 +1,42 @@
+trigger:
+  none
+
+schedules:
+  - cron: "0 0 * * *"
+    displayName: "Daily training data pipeline run"
+    branches:
+      include:
+      - master
+    always: true
+
+name: "data_pipeline"
+jobs:
+  - job: 'data_pipeline_job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      - group: Reaktor-Azure-MLOps-Environment-VariableGroup
+      - group: Reaktor-Azure-MLOps-VariableGroup
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.6'
+          architecture: 'x64'
+      
+      - script: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+        displayName: 'Installing requirements'
+      
+      - script: |
+          python src/package/data_pipeline/main.py
+        displayName: 'Running the data pipeline job'
+        env:
+          STORAGE_ACCOUNT_NAME: $(StorageAccountName)
+          STORAGE_ACCOUNT_KEY: $(StorageAccountKey)
+          TENANT_ID: $(TenantId)
+          SERVICE_PRINCIPAL_ID: $(ServicePrincipalId)
+          SERVICE_PRINCIPAL_PASSWORD: $(ServicePrincipalPassword)
+          WORKSPACE_NAME: $(WorkspaceName)
+          RESOURCE_GROUP_NAME: $(ResourceGroupName)
+          SUBSCRIPTION_ID: $(SubscriptionId)

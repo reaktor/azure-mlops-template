@@ -1,0 +1,43 @@
+trigger:
+  branches:
+    include:
+      - 'master'
+
+name: 'aml_pipeline'
+jobs:
+  - job: 'aml_pipeline_job'
+    pool:
+      vmImage: 'ubuntu-latest'
+    variables:
+      - group: Reaktor-Azure-MLOps-Environment-VariableGroup
+      - group: Reaktor-Azure-MLOps-VariableGroup
+    steps:
+      - task: UsePythonVersion@0
+        inputs:
+          versionSpec: '3.6'
+          architecture: 'x64'
+    
+      - script: |
+          python -m pip install --upgrade pip
+          pip install --upgrade setuptools wheel
+        displayName: 'Installing setuptools and wheel'
+      
+      - script: |
+          cd src/
+          python setup.py bdist_wheel
+        displayName: 'Create wheel file'
+      
+      - script: |
+          pip install -r requirements.txt
+        displayName: 'Installing requirements'
+    
+      - script: |
+          python src/package/aml_pipeline/main.py
+        displayName: 'Running the AML pipeline job'
+        env:
+          TENANT_ID: $(TenantID)
+          SERVICE_PRINCIPAL_ID: $(ServicePrincipalId)
+          SERVICE_PRINCIPAL_PASSWORD: $(ServicePrincipalPassword)
+          WORKSPACE_NAME: $(WorkspaceName)
+          RESOURCE_GROUP_NAME: $(ResourceGroupName)
+          SUBSCRIPTION_ID: $(SubscriptionId)

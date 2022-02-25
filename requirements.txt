@@ -1,0 +1,8 @@
+azureml-sdk
+azure-storage-blob
+joblib
+pandas
+requests
+scikit-learn
+
+-e src
